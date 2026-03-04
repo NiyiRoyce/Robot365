@@ -1,8 +1,9 @@
 // PATH: components/home/FoundersTeaser.tsx
 
 import Link from "next/link";
+import Image from "next/image";
 import { FOUNDERS } from "@/lib/constants";
-import { ArrowRight, User } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export default function FoundersTeaser() {
   const featured = FOUNDERS.slice(0, 3);
@@ -34,9 +35,16 @@ export default function FoundersTeaser() {
               key={founder.id}
               className="bg-white border border-gray-100 rounded-sm p-7 hover:border-gray-300 hover:shadow-sm transition-all duration-200"
             >
-              {/* Avatar placeholder */}
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-5">
-                <User size={28} className="text-gray-400" />
+              {/* Founder avatar */}
+              <div className="w-16 h-16 rounded-full overflow-hidden mb-5 flex-shrink-0">
+                <Image
+                  src={founder.imageUrl}
+                  alt={founder.name}
+                  width={64}
+                  height={64}
+                  className="w-full h-full object-cover"
+                  unoptimized
+                />
               </div>
               <h3 className="font-bold text-lg leading-tight">{founder.name}</h3>
               <p className="text-gray-500 text-sm mb-3">{founder.title}</p>
