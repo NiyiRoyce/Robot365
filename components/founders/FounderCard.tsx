@@ -12,9 +12,17 @@ export default function FounderCard({ founder }: FounderCardProps) {
   return (
     <div className="bg-white border border-gray-100 rounded-sm p-8 hover:border-gray-300 hover:shadow-md transition-all duration-200 flex flex-col">
       {/* Avatar */}
-      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6 flex-shrink-0">
-        <User size={34} className="text-gray-400" />
-      </div>
+      {founder.imageUrl ? (
+        <img
+          src={founder.imageUrl}
+          alt={`Photo of ${founder.name}`}
+          className="w-20 h-20 rounded-full object-cover mb-6 flex-shrink-0"
+        />
+      ) : (
+        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6 flex-shrink-0">
+          <User size={34} className="text-gray-400" />
+        </div>
+      )}
 
       {/* Name & title */}
       <div className="mb-4">

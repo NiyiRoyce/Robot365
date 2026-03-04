@@ -869,6 +869,10 @@ video {
 .bg-white\/95{
   background-color: rgb(255 255 255 / 0.95);
 }
+.object-cover{
+  -o-object-fit: cover;
+     object-fit: cover;
+}
 .p-10{
   padding: 2.5rem;
 }
