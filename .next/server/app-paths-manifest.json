@@ -1,6 +1,3 @@
 {
-  "/page": "app/page.js",
-  "/services/page": "app/services/page.js",
-  "/investor/page": "app/investor/page.js",
-  "/founders/page": "app/founders/page.js"
+  "/investor/page": "app/investor/page.js"
 }

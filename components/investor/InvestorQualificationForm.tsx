@@ -5,12 +5,69 @@
 import { useState } from "react";
 import Button from "@/components/ui/Button";
 
+interface FormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  investmentBudget: string;
+  accreditedInvestor: string;
+  message: string;
+}
+
 export default function InvestorQualificationForm() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState<FormData>({
+    fullName: "",
+    email: "",
+    phone: "",
+    investmentBudget: "",
+    accreditedInvestor: "",
+    message: "",
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to submit form");
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      );
+      console.error("Form submission error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {
@@ -34,6 +91,12 @@ export default function InvestorQualificationForm() {
         Complete this form to begin your investment journey
       </p>
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-sm p-4 mb-6">
+          <p className="text-red-700 text-sm">{error}</p>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label className="block text-sm font-medium mb-1.5">
@@ -41,9 +104,13 @@ export default function InvestorQualificationForm() {
           </label>
           <input
             type="text"
+            name="fullName"
             placeholder="John Smith"
+            value={formData.fullName}
+            onChange={handleInputChange}
             required
-            className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors duration-150"
+            disabled={loading}
+            className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors duration-150 disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
         </div>
 
@@ -53,9 +120,13 @@ export default function InvestorQualificationForm() {
           </label>
           <input
             type="email"
+            name="email"
             placeholder="john@example.com"
+            value={formData.email}
+            onChange={handleInputChange}
             required
-            className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors duration-150"
+            disabled={loading}
+            className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors duration-150 disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
         </div>
 
@@ -65,9 +136,13 @@ export default function InvestorQualificationForm() {
           </label>
           <input
             type="tel"
+            name="phone"
             placeholder="+1 (555) 123-4567"
+            value={formData.phone}
+            onChange={handleInputChange}
             required
-            className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors duration-150"
+            disabled={loading}
+            className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors duration-150 disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
         </div>
 
@@ -76,9 +151,12 @@ export default function InvestorQualificationForm() {
             Investment Budget Range <span className="text-black">*</span>
           </label>
           <select
+            name="investmentBudget"
+            value={formData.investmentBudget}
+            onChange={handleInputChange}
             required
-            defaultValue=""
-            className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors duration-150 bg-white"
+            disabled={loading}
+            className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors duration-150 bg-white disabled:bg-gray-50 disabled:cursor-not-allowed"
           >
             <option value="" disabled>Select a range</option>
             <option value="25k-100k">$25,000 – $100,000</option>
@@ -93,9 +171,12 @@ export default function InvestorQualificationForm() {
             Accredited Investor? <span className="text-black">*</span>
           </label>
           <select
+            name="accreditedInvestor"
+            value={formData.accreditedInvestor}
+            onChange={handleInputChange}
             required
-            defaultValue=""
-            className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors duration-150 bg-white"
+            disabled={loading}
+            className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors duration-150 bg-white disabled:bg-gray-50 disabled:cursor-not-allowed"
           >
             <option value="" disabled>Please select</option>
             <option value="yes">Yes, I am an accredited investor</option>
@@ -109,14 +190,18 @@ export default function InvestorQualificationForm() {
             Message (Optional)
           </label>
           <textarea
+            name="message"
             placeholder="Tell us about your investment goals..."
+            value={formData.message}
+            onChange={handleInputChange}
             rows={4}
-            className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors duration-150 resize-none"
+            disabled={loading}
+            className="w-full border border-gray-200 rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors duration-150 resize-none disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
         </div>
 
-        <Button type="submit" fullWidth className="py-4 text-base">
-          Apply for Investment Access
+        <Button type="submit" fullWidth disabled={loading} className="py-4 text-base">
+          {loading ? "Submitting..." : "Apply for Investment Access"}
         </Button>
 
         <p className="text-xs text-gray-400 text-center">
