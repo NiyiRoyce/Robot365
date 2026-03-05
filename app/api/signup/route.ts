@@ -1,17 +1,12 @@
 // PATH: app/api/signup/route.ts
 
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 
-// Use server-side environment variables (no NEXT_PUBLIC prefix) to avoid leaking secrets
-// These should be defined in .env.local or in your deployment environment and never committed.
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-
-// don't throw at module load time; validate when handling a request
-// and allow the API to succeed (albeit without sending Telegram) if config
-// is absent.  Builds run during compilation so throwing here will break
-// deployments when env vars aren't set yet.
-
+/**
+ * Types
+ */
 interface SignupFormData {
   fullName: string;
   email: string;
@@ -21,39 +16,58 @@ interface SignupFormData {
   message?: string;
 }
 
+/**
+ * Constants
+ */
+const BUDGET_RANGE: Record<string, string> = {
+  "25k-100k": "$25,000 – $100,000",
+  "100k-500k": "$100,000 – $500,000",
+  "500k-2m": "$500,000 – $2,000,000",
+  "2m+": "$2,000,000+",
+};
+
+const ACCREDITED_STATUS: Record<string, string> = {
+  yes: "✅ Yes, Accredited",
+  no: "❌ No, Not Accredited",
+  unsure: "❓ Unsure",
+};
+
+/**
+ * API Handler
+ */
 export async function POST(request: NextRequest) {
   try {
+    const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+    const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
     const data: SignupFormData = await request.json();
 
-    // Validate required fields
-    if (!data.fullName || !data.email || !data.phone) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+    const validationError = validateSignup(data);
+
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 });
     }
 
-    // build the message now that we know we have data
     const telegramMessage = formatTelegramMessage(data);
 
-    // if the Telegram config is missing we don't want to break the build or
-    // crash on every request.  Instead log and return a success response
-    // noting that the notification couldn't be sent.
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-      console.warn(
-        "Telegram configuration missing; skipping notification."
-      );
+      console.warn("Telegram configuration missing");
+
       return NextResponse.json(
         { message: "Signup received (notification disabled)" },
         { status: 200 }
       );
     }
 
-    // Send to Telegram
-    const telegramResponse = await sendToTelegram(telegramMessage);
+    const telegramResponse = await sendToTelegram(
+      telegramMessage,
+      TELEGRAM_BOT_TOKEN,
+      TELEGRAM_CHAT_ID
+    );
 
     if (!telegramResponse.ok) {
-      console.error("Telegram API error:", telegramResponse.result);
+      console.error("Telegram API error:", telegramResponse);
+
       return NextResponse.json(
         { error: "Failed to send notification" },
         { status: 500 }
@@ -66,6 +80,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Signup API error:", error);
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -73,59 +88,65 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * Validation
+ */
+function validateSignup(data: SignupFormData): string | null {
+  if (!data.fullName) return "Full name is required";
+  if (!data.email) return "Email is required";
+  if (!data.phone) return "Phone number is required";
+
+  return null;
+}
+
+/**
+ * Format Telegram Message
+ */
 function formatTelegramMessage(data: SignupFormData): string {
-  const budgetRange: { [key: string]: string } = {
-    "25k-100k": "$25,000 – $100,000",
-    "100k-500k": "$100,000 – $500,000",
-    "500k-2m": "$500,000 – $2,000,000",
-    "2m+": "$2,000,000+",
-  };
-
-  const accreditedStatus: { [key: string]: string } = {
-    yes: "✅ Yes, Accredited",
-    no: "❌ No, Not Accredited",
-    unsure: "❓ Unsure",
-  };
-
   const message = `
-<b>NEW  SIGNUP</b>
+<b>NEW SIGNUP</b>
 
 👤 Name: ${data.fullName}
 📧 Email: ${data.email}
 📱 Phone: ${data.phone}
 
-💰 Investment Budget: ${budgetRange[data.investmentBudget] || data.investmentBudget}
-🏛️ Accredited Investor: ${accreditedStatus[data.accreditedInvestor] || data.accreditedInvestor}
+💰 Investment Budget: ${
+    BUDGET_RANGE[data.investmentBudget] || data.investmentBudget
+  }
 
-${data.message ? ` Message:\n${data.message}` : ""}
+🏛️ Accredited Investor: ${
+    ACCREDITED_STATUS[data.accreditedInvestor] || data.accreditedInvestor
+  }
 
-⏰ Timestamp: ${new Date().toLocaleString("en-US", { timeZone: "UTC" })} UTC
-  `;
+${data.message ? `💬 Message:\n${data.message}` : ""}
+
+⏰ Timestamp: ${new Date().toISOString()} UTC
+`;
 
   return message.trim();
 }
 
+/**
+ * Telegram Sender
+ */
 async function sendToTelegram(
-  message: string
+  message: string,
+  token: string,
+  chatId: string
 ): Promise<{ ok: boolean; result: any }> {
-  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: TELEGRAM_CHAT_ID,
-        text: message,
-        parse_mode: "HTML",
-      }),
-    });
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: message,
+      parse_mode: "HTML",
+    }),
+  });
 
-    return await response.json();
-  } catch (error) {
-    console.error("Telegram API request failed:", error);
-    throw error;
-  }
+  return response.json();
 }
