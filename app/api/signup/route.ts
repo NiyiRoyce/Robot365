@@ -7,12 +7,10 @@ import { NextRequest, NextResponse } from "next/server";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
-// sanity check - fail early if the values are missing
-if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-  throw new Error(
-    "Missing Telegram configuration in environment variables. Please set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID."
-  );
-}
+// don't throw at module load time; validate when handling a request
+// and allow the API to succeed (albeit without sending Telegram) if config
+// is absent.  Builds run during compilation so throwing here will break
+// deployments when env vars aren't set yet.
 
 interface SignupFormData {
   fullName: string;
@@ -35,8 +33,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Format message for Telegram
+    // build the message now that we know we have data
     const telegramMessage = formatTelegramMessage(data);
+
+    // if the Telegram config is missing we don't want to break the build or
+    // crash on every request.  Instead log and return a success response
+    // noting that the notification couldn't be sent.
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+      console.warn(
+        "Telegram configuration missing; skipping notification."
+      );
+      return NextResponse.json(
+        { message: "Signup received (notification disabled)" },
+        { status: 200 }
+      );
+    }
 
     // Send to Telegram
     const telegramResponse = await sendToTelegram(telegramMessage);
