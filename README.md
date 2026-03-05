@@ -122,6 +122,21 @@ npm run lint
 | **Layout** | Global app structure (Navbar, Footer) |
 | **Home** | Landing page hero, stats, investment tiers |
 | **Founders** | Team profiles and credentials |
+
+## ⚠️ Security & Configuration
+
+- **Secrets** like Telegram bot tokens must be stored in server-only environment variables.
+  - Use `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` (without the `NEXT_PUBLIC_` prefix) in `.env.local` or your deployment environment.
+  - Never commit these values; rotate them if they have been exposed.
+- The `.next` directory is build output and should be ignored by Git (see `.gitignore`). It previously contained hard‑coded tokens which triggered alerts; remove it from the repo with:
+  ```bash
+  git rm -r --cached .next
+  git commit -m "Remove build artifacts and ignore .next"
+  ```
+
+- After removing the directory, consider purging it from history or force‑pushing a cleaned branch if the repository was publicly accessible.
+
+
 | **Investor** | Investment application form & info |
 | **Services** | Investment process & offerings |
 | **UI** | Reusable widgets (buttons, cards, icons) |

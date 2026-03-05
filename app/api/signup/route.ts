@@ -2,8 +2,17 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-const TELEGRAM_BOT_TOKEN = process.env.NEXT_PUBLIC_TELEGRAM_BOT_TOKEN;
-const TELEGRAM_CHAT_ID = process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID;
+// Use server-side environment variables (no NEXT_PUBLIC prefix) to avoid leaking secrets
+// These should be defined in .env.local or in your deployment environment and never committed.
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+// sanity check - fail early if the values are missing
+if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+  throw new Error(
+    "Missing Telegram configuration in environment variables. Please set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID."
+  );
+}
 
 interface SignupFormData {
   fullName: string;

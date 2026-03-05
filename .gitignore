@@ -4,3 +4,6 @@ node_modules/
 # Environment variables
 .env.local
 .env*.local
+
+# Next.js build output – should never be committed, contains compiled code and can leak secrets
+.next/
