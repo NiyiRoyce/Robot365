@@ -263,7 +263,7 @@ export const FOUNDERS: Founder[] = [
 ];
 
 export const CONTACT_INFO = {
-  phone: "+1 (818) 265-8266",
+  phone: "+1 (813) 461-0453",
   email: "invest@robot365.com",
   address: "1200 Innovation Drive\nLos Angeles, CA 90017",
 };
