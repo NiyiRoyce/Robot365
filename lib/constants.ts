@@ -73,7 +73,7 @@ export const INVESTMENT_TIERS: InvestmentTier[] = [
     name: "Starter Access",
     minimumInvestment: "$25,000",
     projectedROI: "18-24%",
-    duration: "24 months",
+    duration: "2 months",
     benefits: [
       "Portfolio diversification",
       "Quarterly performance reports",
@@ -86,7 +86,7 @@ export const INVESTMENT_TIERS: InvestmentTier[] = [
     name: "Growth Portfolio",
     minimumInvestment: "$100,000",
     projectedROI: "24-32%",
-    duration: "18 months",
+    duration: "5 months",
     benefits: [
       "All Starter benefits",
       "Priority deal access",
@@ -100,7 +100,7 @@ export const INVESTMENT_TIERS: InvestmentTier[] = [
     name: "Institutional Elite",
     minimumInvestment: "$500,000",
     projectedROI: "32-42%",
-    duration: "12 months",
+    duration: "10 months",
     benefits: [
       "All Growth benefits",
       "Direct founder access",
